@@ -20,7 +20,7 @@ variable "password" {
 
 provider "esxi" {
 #  esxi_hostname      = "esxi"
-  esxi_hostname      = "192.168.255.16"
+  esxi_hostname      = "84.17.21.146"
 #  esxi_hostport      = "22"
 #  esxi_hostssl       = "443"
   esxi_username      = var.username

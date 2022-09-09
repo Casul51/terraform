@@ -1,105 +1,45 @@
 terraform {
-  required_providers {
-    yandex = {
-      source = "yandex-cloud/yandex"
-    }
-  }
   required_version = ">= 0.13"
-}
-
-provider "yandex" {
-  token     = "da"
-  cloud_id  = "da"
-  folder_id = "da"
-  zone      = "ru-central1-a"
-}
-
-
-
-resource "yandex_compute_instance" "vm-1" {
-  name = "terraform1"
-
-  resources {
-    cores  = 2
-    memory = 2
-  }
-
-  boot_disk {
-    initialize_params {
-      image_id = "da"
+  required_providers {
+    esxi = {
+      source = "registry.terraform.io/josenk/esxi"
+      	#VPN NEEDED for init
     }
   }
+}
 
-  network_interface {
-    subnet_id = yandex_vpc_subnet.subnet-1.id
-    nat       = true
+# export TF_VAR_username="username"
+variable "username" {
+  description = "The username for the DB master user"
+  type        = string
+}
+variable "password" {
+  description = "The password for the DB master user"
+  type        = string
+}
+
+provider "esxi" {
+#  esxi_hostname      = "esxi"
+  esxi_hostname      = "192.168.255.16"
+#  esxi_hostport      = "22"
+#  esxi_hostssl       = "443"
+  esxi_username      = var.username
+  esxi_password      = var.password
+}
+
+
+resource "esxi_guest" "cml2-terraform-test" {
+  guest_name         = "cml2-terraform-test"
+  
+  disk_store         = "datastore1"
+
+#  numvcpus = "4"
+#  memsize = "8192"
+#  clone_from_vm      = "datastore1/cml1/cml240_rev2"
+  clone_from_vm      = "cml240_rev2"
+
+  network_interfaces {
+    virtual_network = "VM Network"
   }
-
-  metadata = {
-    #    ssh-keys = "ubuntu:${file("~/.ssh/id_rsa.pub")}"
-    user-data = "${file("./user_add.txt")}"
-
-  }
+#  power  			 = "on"
 }
-#
-# resource "yandex_compute_instance" "vm-2" {
-#   name = "terraform2"
-#
-#   resources {
-#     cores  = 2
-#     memory = 2
-#   }
-#
-#   boot_disk {
-#     initialize_params {
-#       image_id = "da"
-#     }
-#   }
-#
-#   network_interface {
-#     subnet_id = yandex_vpc_subnet.subnet-1.id
-#     nat       = true
-#   }
-#
-#   metadata = {
-#     user-data = "${file("./user_add.txt")}"
-#   }
-# }
-#
-resource "yandex_vpc_network" "network-1" {
-  name = "network1"
-}
-
-resource "yandex_vpc_subnet" "subnet-1" {
-  name           = "subnet1"
-  zone           = "ru-central1-a"
-  network_id     = yandex_vpc_network.network-1.id
-  v4_cidr_blocks = ["192.168.10.0/24"]
-}
-
-
-
-
-
-output "internal_ip_address_vm_1" {
-  value = yandex_compute_instance.vm-1.network_interface.0.ip_address
-}
-
-# output "internal_ip_address_vm_2" {
-#   value = yandex_compute_instance.vm-2.network_interface.0.ip_address
-# }
-
-
-output "external_ip_address_vm_1" {
-  value = yandex_compute_instance.vm-1.network_interface.0.nat_ip_address
-}
-#
-# output "external_ip_address_vm_2" {
-#   value = yandex_compute_instance.vm-2.network_interface.0.nat_ip_address
-# }
-
-
-
-
-
-
